@@ -47,7 +47,7 @@ def test_reading_generates_bill_and_duplicate_is_blocked(client, app, seeded):
     assert login(client, "adaeze@example.com").status_code == 200
     first = post(client, "/api/v1/me/readings", json={"meter_id": seeded["meter_a"], "reading": "6842.000"})
     assert first.status_code == 201
-    assert first.get_json()["bill"]["total_amount"] == "17788.84"
+    assert Decimal(first.get_json()["bill"]["total_amount"]) == Decimal("17788.84")
     second = post(client, "/api/v1/me/readings", json={"meter_id": seeded["meter_a"], "reading": "6900"})
     assert second.status_code == 409
 
@@ -61,7 +61,7 @@ def test_bill_keeps_tariff_snapshot(client, app, seeded):
         tariff.rate_per_kwh = Decimal("999.0000")
         db.session.commit()
         bill = db.session.get(Bill, bill_id)
-        assert bill.rate_snapshot == Decimal("83.1400")
+        assert bill.rate_per_kwh == Decimal("83.1400")
         assert bill.total_amount == Decimal("17788.84")
 
 
@@ -75,3 +75,14 @@ def test_payment_amount_comes_from_bill_and_double_payment_blocked(client, app, 
     assert second.status_code == 409
     with app.app_context():
         assert db.session.query(Payment).filter_by(bill_id=bill["id"]).count() == 1
+
+
+def test_production_customer_cannot_simulate_payment(client, app, seeded):
+    assert login(client, "adaeze@example.com").status_code == 200
+    bill = post(client, "/api/v1/me/readings", json={"meter_id": seeded["meter_a"], "reading": "6842"}).get_json()["bill"]
+    app.config["ENV_NAME"] = "production"
+    response = post(client, f"/api/v1/me/bills/{bill['id']}/pay", json={"method": "simulated"})
+    assert response.status_code == 503
+    with app.app_context():
+        assert db.session.get(Bill, bill["id"]).status == "unpaid"
+        assert db.session.query(Payment).filter_by(bill_id=bill["id"]).count() == 0

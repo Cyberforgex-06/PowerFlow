@@ -48,6 +48,8 @@ class BaseConfig:
         )
         # Supabase often displays a generic postgresql:// URI. Force Psycopg 3,
         # the driver pinned by this project, rather than relying on psycopg2 defaults.
+        if db_url.startswith("postgres://"):
+            db_url = "postgresql://" + db_url[len("postgres://"):]
         if db_url.startswith("postgresql://"):
             db_url = "postgresql+psycopg://" + db_url[len("postgresql://"):]
         app.config["SQLALCHEMY_DATABASE_URI"] = db_url
@@ -90,6 +92,8 @@ class ProductionConfig(BaseConfig):
         if len(secret) < 32:
             raise RuntimeError("Production SECRET_KEY must be set and at least 32 characters long.")
         db_url = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        if not os.getenv("DATABASE_URL"):
+            raise RuntimeError("Production DATABASE_URL must be explicitly configured.")
         if not db_url.startswith(("postgresql://", "postgresql+psycopg://")):
             raise RuntimeError("Production DATABASE_URL must be PostgreSQL.")
 

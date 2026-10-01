@@ -88,3 +88,23 @@ def test_login_rotates_prelogin_session_state(client, seeded):
     assert postlogin_cookie is not None
     assert postlogin_cookie.value != prelogin_cookie.value
     assert response.get_json()["csrf_token"] != first_csrf
+
+
+def test_new_account_persists_and_opens_empty_private_dashboard(client, app):
+    payload = {"full_name": "New Customer", "email": "new@example.com", "password": "StrongPass123", "role": "admin"}
+    registered = post(client, "/api/v1/auth/register", json=payload)
+    assert registered.status_code == 201
+    assert registered.get_json()["user"]["role"] == "customer"
+    from app.models import CustomerProfile
+    with app.app_context():
+        user = db.session.query(User).filter_by(email=payload["email"]).one()
+        assert user.password_hash != payload["password"]
+        assert db.session.query(CustomerProfile).filter_by(user_id=user.id).count() == 1
+    assert login(client, payload["email"]).status_code == 200
+    dashboard = client.get("/api/v1/me/dashboard", base_url=ORIGIN)
+    assert dashboard.status_code == 200
+    assert dashboard.get_json()["recent_bills"] == []
+    assert dashboard.get_json()["unpaid_count"] == 0
+    assert post(client, "/api/v1/auth/logout").status_code == 200
+    assert client.get("/api/v1/me/dashboard", base_url=ORIGIN).status_code == 401
+    assert login(client, payload["email"]).status_code == 200

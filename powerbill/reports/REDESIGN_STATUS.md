@@ -17,4 +17,4 @@ The full Next frontend shares the design system and preserves its existing API c
 
 ## Limits
 
-The Render static preview does not create accounts, accept payment or persist sample actions. Real deployment still requires the separate PowerBill database connection and a passing backend verification gate. The inherited pytest fixture is stale relative to the supplied nine-table models (`Meter.opening_reading` is now derived and read-only); no production schema change was attempted during the UI work.
+The Render static preview does not create accounts, accept payment or persist sample actions. Live activation still requires the separate PowerBill database connection. The backend fixtures now match the nine-table schema and isolate Flask request contexts correctly. All 66 backend tests pass, including persistent signup/sign-in, private dashboard access, role boundaries, and the production simulated-payment block. TypeScript and the Next production build pass. See LIVE_ACCOUNTS.md for activation configuration. No production schema changes were made.

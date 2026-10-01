@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from app.extensions import db
 from app.models import AuditLog, User
 from tests.conftest import login, patch, post
@@ -19,5 +21,5 @@ def test_tariff_changes_are_audited_with_before_after(client, app, seeded):
     with app.app_context():
         event = db.session.query(AuditLog).filter_by(action="tariff_updated").order_by(AuditLog.id.desc()).first()
         assert event is not None
-        assert event.details["before"]["rate_per_kwh"] == "83.1400"
-        assert event.details["after"]["rate_per_kwh"] == "84.2500"
+        assert Decimal(event.details["before"]["rate_per_kwh"]) == Decimal("83.1400")
+        assert Decimal(event.details["after"]["rate_per_kwh"]) == Decimal("84.2500")

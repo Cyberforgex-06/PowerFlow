@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 
 from flask import Flask, jsonify, request
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from .blueprints.admin import admin_bp
 from .blueprints.auth import auth_bp
@@ -50,6 +52,11 @@ def create_app(config_name: str | None = None) -> Flask:
 
     @app.get("/health")
     def health():
+        try:
+            db.session.execute(text("SELECT 1"))
+        except SQLAlchemyError:
+            db.session.rollback()
+            return jsonify({"ok": False}), 503
         return jsonify({"ok": True})
 
     app.register_blueprint(public_bp, url_prefix="/api/v1/public")

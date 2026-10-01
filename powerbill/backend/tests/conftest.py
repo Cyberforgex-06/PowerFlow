@@ -8,6 +8,7 @@ from app import create_app
 from app.extensions import db
 from app.models import Meter, Tariff, User
 from app.security import hash_password
+from app.services.billing import create_opening_reading
 
 ORIGIN = "http://localhost"
 
@@ -17,7 +18,8 @@ def app():
     app = create_app("testing")
     with app.app_context():
         db.create_all()
-        yield app
+    yield app
+    with app.app_context():
         db.session.remove()
         db.drop_all()
 
@@ -87,15 +89,16 @@ def seeded(app):
             meter_number="45-7821-9032",
             customer_id=customer_a.id,
             tariff_id=tariff.id,
-            opening_reading=Decimal("6658.000"),
         )
         meter_b = Meter(
             meter_number="19-2033-8871",
             customer_id=customer_b.id,
             tariff_id=tariff.id,
-            opening_reading=Decimal("1000.000"),
         )
         db.session.add_all([meter_a, meter_b])
+        db.session.flush()
+        create_opening_reading(meter=meter_a, submitted_by=staff.id, opening=Decimal("6658.000"))
+        create_opening_reading(meter=meter_b, submitted_by=staff.id, opening=Decimal("1000.000"))
         db.session.commit()
         return {
             "tariff_id": tariff.id,

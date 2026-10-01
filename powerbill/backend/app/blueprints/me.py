@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import func, select
 
 from ..extensions import db
@@ -128,6 +128,8 @@ def pay_bill(bill_id: str):
     if bill is None:
         return api_error("not_found", "Bill was not found.", 404)
     data = request.get_json(silent=True) or {}
+    if current_app.config["ENV_NAME"] == "production":
+        return api_error("checkout_unavailable", "Online payments are not available yet. Contact your billing officer to record a verified payment.", 503)
     method = data.get("method", "simulated")
     if method != "simulated":
         return api_error("invalid_payment_method", "Customer checkout is simulated in this project.", 400)

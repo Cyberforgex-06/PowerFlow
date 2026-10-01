@@ -12,25 +12,22 @@ def test_mark_overdue_cli(app, seeded):
         reading = MeterReading(
             meter_id=seeded["meter_a"],
             submitted_by=seeded["customer_a"],
-            billing_month=date.today().replace(day=1),
-            reading=Decimal("6700"),
-            source="customer",
+            billing_period=date.today().replace(day=1),
+            reading_kwh=Decimal("6700"),
         )
         db.session.add(reading)
         db.session.flush()
         bill = Bill(
             meter_id=seeded["meter_a"],
-            customer_id=seeded["customer_a"],
             reading_id=reading.id,
-            billing_month=reading.billing_month,
+            billing_period=reading.billing_period,
             previous_reading=Decimal("6658"),
             current_reading=Decimal("6700"),
-            units=Decimal("42"),
-            rate_snapshot=Decimal("83.14"),
-            fixed_charge_snapshot=Decimal("1250"),
-            vat_percent_snapshot=Decimal("7.5"),
+            units_consumed=Decimal("42"),
+            rate_per_kwh=Decimal("83.14"),
+            fixed_charge=Decimal("1250"),
+            vat_percent=Decimal("7.5"),
             energy_charge=Decimal("3491.88"),
-            subtotal=Decimal("4741.88"),
             vat_amount=Decimal("355.64"),
             total_amount=Decimal("5097.52"),
             status="unpaid",

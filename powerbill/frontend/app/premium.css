@@ -39,3 +39,7 @@
 .auth-main input:not(:focus){cursor:default}
 .auth-main input:focus,.auth-main textarea:focus{cursor:text}
 .auth-main a,.auth-main button:not(:disabled){cursor:pointer}
+
+/* Suppress the browser navigation caret on static auth copy, not typed input. */
+.auth-main{caret-color:transparent}
+.auth-main input,.auth-main textarea,.auth-main [contenteditable="true"]{caret-color:var(--ink)}

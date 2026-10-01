@@ -1,6 +1,7 @@
 import type { ApiErrorShape } from "@/lib/types";
 
 let csrfToken: string | null = null;
+let csrfRequest: Promise<string> | null = null;
 
 export class ApiError extends Error {
   constructor(
@@ -21,7 +22,7 @@ async function parseError(response: Response) {
   return new ApiError(
     response.status,
     body?.error?.code ?? "request_failed",
-    body?.error?.message ?? "The request could not be completed.",
+    body?.error?.message ?? (response.status >= 500 ? "The service is temporarily unavailable. Please try again shortly. If you were creating an account, try signing in before submitting again." : "The request could not be completed."),
     body?.error?.fields,
   );
 }
@@ -34,13 +35,35 @@ function navigateForStatus(error: ApiError) {
   if (error.status === 429) window.location.assign(`/429?next=${encodeURIComponent(next)}`);
 }
 
-async function getCsrfToken() {
+// Retry only this read-only request: a sleeping backend can return a gateway page.
+// Never automatically replay signup, payments, or other mutations after a 5xx.
+async function loadCsrfToken(): Promise<string> {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    try {
+      const response = await fetch("/api/v1/auth/csrf", {
+        credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(12000),
+      });
+      if (response.ok) {
+        const body = await response.json().catch(() => null);
+        if (typeof body?.csrf_token === "string" && body.csrf_token) {
+          csrfToken = body.csrf_token;
+          return body.csrf_token;
+        }
+      } else if (![502, 503, 504].includes(response.status)) {
+        throw await parseError(response);
+      }
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+    }
+    if (attempt < 7) await new Promise(resolve => setTimeout(resolve, Math.min(2000 * 2 ** attempt, 10000)));
+  }
+  throw new ApiError(503, "service_unavailable", "The sign-in service is taking longer to respond. Please try again in a moment.");
+}
+
+export async function prepareAuthSession(): Promise<string> {
   if (csrfToken) return csrfToken;
-  const response = await fetch("/api/v1/auth/csrf", { credentials: "same-origin", cache: "no-store" });
-  if (!response.ok) throw await parseError(response);
-  const body = (await response.json()) as { csrf_token: string };
-  csrfToken = body.csrf_token;
-  return csrfToken;
+  if (!csrfRequest) csrfRequest = loadCsrfToken().finally(() => { csrfRequest = null; });
+  return csrfRequest;
 }
 
 export async function apiRequest<T>(path: string, options: ApiOptions = {}): Promise<T> {
@@ -48,15 +71,24 @@ export async function apiRequest<T>(path: string, options: ApiOptions = {}): Pro
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
   if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-  if (["POST", "PATCH", "DELETE"].includes(method)) headers.set("X-CSRF-Token", await getCsrfToken());
+  if (["POST", "PATCH", "DELETE"].includes(method)) headers.set("X-CSRF-Token", await prepareAuthSession());
 
-  const response = await fetch(path, {
+  const send = () => fetch(path, {
     ...options,
     method,
     headers,
     credentials: "same-origin",
     cache: "no-store",
   });
+  let response = await send();
+  if (response.status === 403) {
+    const body = await response.clone().json().catch(() => null);
+    if (body?.error?.code === "csrf_failed") {
+      clearClientCsrf();
+      headers.set("X-CSRF-Token", await prepareAuthSession());
+      response = await send();
+    }
+  }
   if (!response.ok) {
     const error = await parseError(response);
     if (options.authRedirect !== false) navigateForStatus(error);

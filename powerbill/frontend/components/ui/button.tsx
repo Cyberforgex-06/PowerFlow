@@ -8,7 +8,7 @@ const styles: Record<Variant, string> = {
   danger: "bg-white text-status-overdue border-status-overdue hover:bg-[#FFF0EE] active:translate-y-px",
   text: "bg-transparent text-forest border-transparent hover:underline underline-offset-4",
 };
-const base = "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border px-5 py-2.5 text-sm font-semibold transition duration-150 disabled:cursor-not-allowed disabled:opacity-50";
+const base = "pb-button inline-flex min-h-11 items-center justify-center gap-2 rounded-md border px-5 py-2.5 text-sm font-semibold transition duration-150 disabled:cursor-not-allowed disabled:opacity-50";
 
 export function Button({ variant="primary", className="", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
   return <button className={`${base} ${styles[variant]} ${className}`} {...props} />;

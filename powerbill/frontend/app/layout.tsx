@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { connection } from "next/server";
 import "./globals.css";
 import "./premium.css";
+import "./motion.css";
+import { PageMotion } from "@/components/motion/page-motion";
 
 
 export const metadata: Metadata = {
@@ -16,7 +18,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   await connection();
   return (
     <html lang="en-NG">
-      <body>{children}</body>
+      <body>{children}<PageMotion /></body>
     </html>
   );
 }

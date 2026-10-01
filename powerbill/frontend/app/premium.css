@@ -33,3 +33,9 @@
 .estimator-signin{width:100%;text-align:center;justify-self:center}
 .estimator-signin .btn{display:flex;justify-content:center;align-items:center;gap:10px;max-width:240px;margin:24px auto 0}
 @media(max-width:760px){.estimator-contained .estimator-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Only focused form controls display the typing pointer. */
+.auth-main,.auth-main h1,.auth-main h2,.auth-main p,.auth-main label{cursor:default}
+.auth-main input:not(:focus){cursor:default}
+.auth-main input:focus,.auth-main textarea:focus{cursor:text}
+.auth-main a,.auth-main button:not(:disabled){cursor:pointer}

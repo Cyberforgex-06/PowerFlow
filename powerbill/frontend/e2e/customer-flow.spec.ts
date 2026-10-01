@@ -11,7 +11,8 @@ test("register → login → assign meter → submit reading → pay → receipt
   await page.getByLabel("Full name").fill(`Responsive ${suffix}`);
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password").fill(password);
-  await expect(page.getByText(/PASS · At least 10 characters/)).toBeVisible();
+  await page.getByLabel("Password").blur();
+  await expect(page.getByText("Use at least 10 characters.")).toHaveCount(0);
   await page.getByRole("button", { name: /create account/i }).click();
   await expect(page).toHaveURL(/\/login\?registered=1/);
 

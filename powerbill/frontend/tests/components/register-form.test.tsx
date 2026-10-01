@@ -9,17 +9,18 @@ vi.mock("@/lib/api", async () => {
 });
 
 describe("RegisterForm", () => {
-  it("shows live strong-password hints", async () => {
+  it("shows password feedback after leaving the input and clears it when corrected", async () => {
     const user = userEvent.setup();
     render(<RegisterForm />);
     const password = screen.getByLabelText("Password");
-    expect(screen.getByText(/WAIT · At least 10 characters/)).toBeInTheDocument();
-    await user.type(password, "StrongPass123");
-    expect(screen.getByText(/PASS · At least 10 characters/)).toBeInTheDocument();
-    expect(screen.getByText(/PASS · One uppercase letter/)).toBeInTheDocument();
-    expect(screen.getByText(/PASS · One lowercase letter/)).toBeInTheDocument();
-    expect(screen.getByText(/PASS · One digit/)).toBeInTheDocument();
-    expect(screen.getByText(/PASS · Maximum 72 bytes/)).toBeInTheDocument();
+    expect(screen.queryByText(/WAIT|PASS/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await user.type(password, "Short1");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await user.tab();
+    expect(screen.getByText("Use at least 10 characters.")).toBeInTheDocument();
+    await user.type(password, "LongEnough");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("rejects invalid fields before calling the API", async () => {
@@ -40,6 +41,7 @@ describe("RegisterForm", () => {
     const user = userEvent.setup();
     render(<RegisterForm />);
     await user.type(screen.getByLabelText("Password"), `A1a${"é".repeat(35)}`);
-    expect(screen.getByText(/WAIT · Maximum 72 bytes/)).toBeInTheDocument();
+    await user.tab();
+    expect(screen.getByText("Password must be 72 bytes or fewer.")).toBeInTheDocument();
   });
 });

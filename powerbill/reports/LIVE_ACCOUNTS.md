@@ -14,6 +14,7 @@ API environment:
 
 Frontend environment:
 - `NODE_ENV=production`
+- `NPM_CONFIG_INCLUDE=dev` ensures build-time TypeScript/Tailwind dependencies are installed.
 - `POWERBILL_API_ORIGIN`: exact HTTPS API origin. This is used at build time as well as runtime; rebuild after changing it.
 
 API startup rejects missing database configuration. `/health` checks database connectivity and returns 503 if unavailable. The frontend must not replace the static preview until registration, sign-in, account isolation, refresh, and sign-out pass against the deployed database.
@@ -25,3 +26,9 @@ Production customer checkout is disabled until a verified payment integration ex
 ## Activation check
 
 After the database connection is configured, confirm API health, create a fresh customer through the frontend, sign in, confirm an empty dashboard, sign out and sign in again. Verify persistence in the database without printing password hashes. Remove only the explicitly created test records after verification. Do not seed test customers or sample bills into production.
+
+## Provisioned services
+
+API: `srv-dav1n93ncjis738qul90`, https://powerbill-api.onrender.com
+Frontend: `srv-dav1ndrncjis738qv9kg`, https://powerbill-app-thuv.onrender.com
+Both are free services in Frankfurt. API startup is blocked until DATABASE_URL is supplied. ALLOWED_ORIGINS is configured to the frontend origin; frontend API origin and session secret are configured.

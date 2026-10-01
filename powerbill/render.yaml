@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: powerbill-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: cd powerbill/backend && pip install -r requirements.txt
+    startCommand: cd powerbill/backend && gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60
+    healthCheckPath: /health

@@ -1,0 +1,1 @@
+import { SystemPage } from "@/components/system/system-page"; export default function NotFound(){return <SystemPage kind={404} title="That page could not be found." body="The address may be incorrect, or the record may no longer be available."/>}

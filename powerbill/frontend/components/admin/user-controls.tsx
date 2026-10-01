@@ -1,0 +1,8 @@
+"use client";
+import { useState } from "react";
+import { Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/field";
+import { ApiError, apiRequest } from "@/lib/api";
+import type { Role, User } from "@/lib/types";
+export function UserControls({user,currentUserId}:{user:User;currentUserId:string}){const [role,setRole]=useState<Role>(user.role);const [active,setActive]=useState(user.is_active);const [busy,setBusy]=useState(false);const [message,setMessage]=useState("");const isSelf=user.id===currentUserId;async function save(){setBusy(true);setMessage("");try{await apiRequest<{user:User}>(`/api/v1/admin/users/${user.id}`,{method:"PATCH",body:JSON.stringify({role,is_active:active})});setMessage("Saved") }catch(e){setMessage(e instanceof ApiError?e.message:"Could not save user.")}finally{setBusy(false)}}return <div className="flex flex-col gap-2 sm:flex-row sm:items-center"><Select aria-label={`Role for ${user.full_name}`} value={role} onChange={e=>setRole(e.target.value as Role)} disabled={isSelf}><option value="customer">Customer</option><option value="billing_officer">Billing officer</option><option value="admin">Admin</option></Select><label className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line bg-white px-3 text-xs font-semibold"><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Active</label><Button type="button" onClick={save} disabled={busy} variant="secondary" className="px-4"><Save size={15} strokeWidth={1.8}/>{busy?"Saving…":"Save"}</Button>{message?<span className={`text-xs ${message==="Saved"?"text-forest":"text-status-overdue"}`}>{message}</span>:null}</div>}

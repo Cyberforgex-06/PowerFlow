@@ -1,0 +1,1 @@
+import { SystemPage } from "@/components/system/system-page"; export default function Forbidden(){return <SystemPage kind={403} title="You do not have access to this page." body="PowerBill checks permissions on the Flask API for every protected action. Sign in with an account that has the required role." actionHref="/dashboard" actionLabel="Return to dashboard"/>}

@@ -1,0 +1,11 @@
+TypeScript parser: checked 86 source files
+TypeScript parser: PASS
+Alias imports: PASS (0 missing)
+No localStorage/sessionStorage auth storage: PASS
+No dangerouslySetInnerHTML API usage: PASS
+Proxy checks powerbill_session cookie: PASS
+CSRF header present in client wrapper: PASS
+Same-origin API rewrite present: PASS
+Nonce CSP present: PASS
+CSP frame-ancestors none: PASS
+No NEXT_PUBLIC sensitive config: PASS

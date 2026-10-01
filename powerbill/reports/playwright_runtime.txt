@@ -1,0 +1,5 @@
+
+> powerbill-frontend@0.3.0 test:e2e
+> playwright test --list
+
+error: unknown command 'test'

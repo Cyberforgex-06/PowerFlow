@@ -1,0 +1,3 @@
+import {AuthConnection} from "@/components/auth/auth-connection";
+import {PublicNav} from "@/components/layout/public-nav";
+export default function AuthLayout({children}:{children:React.ReactNode}){return <><AuthConnection/><PublicNav/><main id="main" className="wrap auth-main"><aside className="auth-story"><div><p className="eyebrow">A little less on your mind</p><h2>Every bill.<br/>Every receipt.<br/>Right here.</h2><p>Your electricity account, organised around you.</p><div className="story-circle" aria-hidden="true">↗</div></div><p className="auth-quote">Clear readings. Clear charges.<br/>A calmer way to keep track.</p></aside>{children}</main></>}

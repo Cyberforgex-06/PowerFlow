@@ -1,0 +1,22 @@
+/* Short, one-shot animations keep the interface calm and inexpensive. */
+@keyframes pb-grow { from { transform: scaleY(.08); opacity: .35; } to { transform: scaleY(1); opacity: 1; } }
+@keyframes pb-spin { to { transform: rotate(360deg); } }
+@keyframes pb-confirm { from { opacity: .4; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .pb-button,.btn { transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease; }
+  .pb-card,.feature { transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease; }
+  .pb-button:not(:disabled):active,.btn:active { transform: translateY(1px) scale(.98); }
+  .pb-usage-bar { transform-box: fill-box; transform-origin: bottom; animation: pb-grow 650ms cubic-bezier(.22,1,.36,1) both; }
+  .chart .bar { transform-origin: bottom; animation: pb-grow 800ms cubic-bezier(.22,1,.36,1) both; }
+  .chart .bar:nth-child(2n) { animation-delay: 80ms; }
+  [role="status"],.auth-form [role="alert"] { animation: pb-confirm 240ms ease-out; }
+  .pb-button[aria-busy="true"]::before { content: ""; width: 1em; height: 1em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: pb-spin 750ms linear infinite; flex-shrink: 0; }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .pb-button:not(:disabled):hover,.btn:hover { transform: translateY(-2px); box-shadow: 0 7px 18px #16452e18; }
+  .pb-card:hover,.feature:hover { transform: translateY(-3px); box-shadow: 0 10px 28px #16452e12; border-color: #b9cbc0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pb-button,.btn,.pb-card,.feature,.pb-usage-bar,.chart .bar { animation: none !important; transition: none !important; transform: none !important; }
+}
+@media print { .pb-usage-bar,.chart .bar { animation: none !important; transform: none !important; } }

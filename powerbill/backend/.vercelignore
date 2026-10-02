@@ -1,0 +1,10 @@
+node_modules
+.next
+__pycache__
+.pytest_cache
+.venv
+.env*
+tests
+e2e
+test-results
+playwright-report

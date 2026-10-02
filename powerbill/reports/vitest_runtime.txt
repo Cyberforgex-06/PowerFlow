@@ -1,0 +1,5 @@
+
+> powerbill-frontend@0.3.0 test
+> vitest run --run
+
+sh: 1: vitest: not found

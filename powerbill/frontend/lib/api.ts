@@ -38,10 +38,10 @@ function navigateForStatus(error: ApiError) {
 // Retry only this read-only request: a sleeping backend can return a gateway page.
 // Never automatically replay signup, payments, or other mutations after a 5xx.
 async function loadCsrfToken(): Promise<string> {
-  for (let attempt = 0; attempt < 8; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const response = await fetch("/api/v1/auth/csrf", {
-        credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(12000),
+        credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(75000),
       });
       if (response.ok) {
         const body = await response.json().catch(() => null);
@@ -55,7 +55,7 @@ async function loadCsrfToken(): Promise<string> {
     } catch (error) {
       if (error instanceof ApiError) throw error;
     }
-    if (attempt < 7) await new Promise(resolve => setTimeout(resolve, Math.min(2000 * 2 ** attempt, 10000)));
+    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, Math.min(2000 * 2 ** attempt, 10000)));
   }
   throw new ApiError(503, "service_unavailable", "The sign-in service is taking longer to respond. Please try again in a moment.");
 }

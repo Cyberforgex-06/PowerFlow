@@ -1,9 +1,9 @@
 import "server-only";
-import { cookies, headers } from "next/headers";
+import { backendFetch } from "@/lib/backend-fetch";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ApiErrorShape, Role, User } from "@/lib/types";
 
-const origin = (process.env.POWERBILL_API_ORIGIN ?? "http://127.0.0.1:5000").replace(/\/$/, "");
 
 export class ServerApiError extends Error {
   constructor(public status: number, public code: string, message: string) { super(message); }
@@ -11,14 +11,11 @@ export class ServerApiError extends Error {
 
 export async function serverApi<T>(path: string, init: RequestInit = {}): Promise<T> {
   const cookieStore = await cookies();
-  const requestHeaders = await headers();
   const h = new Headers(init.headers);
   const cookieHeader = cookieStore.toString();
   if (cookieHeader) h.set("cookie", cookieHeader);
-  const userAgent = requestHeaders.get("user-agent");
-  if (userAgent) h.set("user-agent", userAgent);
   h.set("accept", "application/json");
-  const response = await fetch(`${origin}${path}`, { ...init, headers: h, cache: "no-store" });
+  const response = await backendFetch(path, { ...init, headers: h, cache: "no-store" });
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as ApiErrorShape | null;
     throw new ServerApiError(response.status, body?.error.code ?? "request_failed", body?.error.message ?? "Request failed");

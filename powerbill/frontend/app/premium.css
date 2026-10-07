@@ -43,3 +43,8 @@
 /* Suppress the browser navigation caret on static auth copy, not typed input. */
 .auth-main{caret-color:transparent}
 .auth-main input,.auth-main textarea,.auth-main [contenteditable="true"]{caret-color:var(--ink)}
+
+/* Keep primary actions readable above the unlayered anchor reset. */
+.pb-button-primary,.pb-button-primary:visited,.pb-button-primary:hover,.pb-button-primary:focus-visible{color:#F7F5EF}
+
+.auth-connection-status{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:50;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--green);padding:10px 18px;font-size:13px;box-shadow:0 4px 20px #16452e12;max-width:calc(100% - 32px);text-align:center}

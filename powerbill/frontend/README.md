@@ -15,7 +15,7 @@ No authentication package is used. Authentication belongs to the Flask API.
 
 ## Request architecture
 
-Browser requests go to `/api/v1/*` on the Next.js origin. `next.config.ts` rewrites `/api/*` to the Flask origin in `POWERBILL_API_ORIGIN`, so the Flask session cookie remains first-party from the browser's point of view.
+Browser requests go to `/api/v1/*` on the Next.js origin. A Node route handler forwards `/api/v1/*` to the Flask origin in `POWERBILL_API_ORIGIN`, filtering platform headers, so the Flask session cookie remains first-party from the browser's point of view.
 
 - Client mutations use `lib/api.ts`.
 - `lib/api.ts` obtains `GET /api/v1/auth/csrf` and keeps the token in memory only.
@@ -61,3 +61,5 @@ The fixed Phase 2 endpoint list does not provide a billing-officer customer sear
 There is also no `GET /staff/complaints/{id}` endpoint. The response page therefore searches a bounded set of complaint-list pages to locate the selected complaint. A dedicated detail endpoint would be preferable before production.
 
 Bill serializers expose `meter_id` but not `meter_number`, so some bill views cannot show a friendly meter number without additional lookups.
+
+The auth page sends a credential-free browser request to the API `/health` endpoint before acquiring its first-party CSRF token. This activates an idle free Render backend. The CSP allows only the configured API origin for this request. The initial connection can still take about a minute on free hosting.

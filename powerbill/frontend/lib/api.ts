@@ -2,6 +2,20 @@ import type { ApiErrorShape } from "@/lib/types";
 
 let csrfToken: string | null = null;
 let csrfRequest: Promise<string> | null = null;
+let wakeOrigin: string | null = null;
+let sessionPreparedAt = 0;
+
+// Render's sleeping API is not reliably activated by requests from another
+// free Render service. A credential-free browser health request activates it.
+async function wakeBackend() {
+  if (!wakeOrigin) return;
+  try {
+    await fetch(`${wakeOrigin}/health`, {
+      mode: "no-cors", credentials: "omit", cache: "no-store",
+      headers: { Accept: "application/json" }, signal: AbortSignal.timeout(65000),
+    });
+  } catch { /* The same-origin CSRF request confirms readiness and reports errors. */ }
+}
 
 export class ApiError extends Error {
   constructor(
@@ -38,7 +52,9 @@ function navigateForStatus(error: ApiError) {
 // Retry only this read-only request: a sleeping backend can return a gateway page.
 // Never automatically replay signup, payments, or other mutations after a 5xx.
 async function loadCsrfToken(): Promise<string> {
-  for (let attempt = 0; attempt < 3; attempt++) {
+  await wakeBackend();
+  const deadline = Date.now() + 90000;
+  for (let attempt = 0; attempt < 20 && Date.now() < deadline; attempt++) {
     try {
       const response = await fetch("/api/v1/auth/csrf", {
         credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(75000),
@@ -47,6 +63,7 @@ async function loadCsrfToken(): Promise<string> {
         const body = await response.json().catch(() => null);
         if (typeof body?.csrf_token === "string" && body.csrf_token) {
           csrfToken = body.csrf_token;
+          sessionPreparedAt = Date.now();
           return body.csrf_token;
         }
       } else if (![502, 503, 504].includes(response.status)) {
@@ -55,12 +72,17 @@ async function loadCsrfToken(): Promise<string> {
     } catch (error) {
       if (error instanceof ApiError) throw error;
     }
-    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, Math.min(2000 * 2 ** attempt, 10000)));
+    if (attempt < 19 && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, Math.min(2000 * 2 ** attempt, 10000)));
   }
   throw new ApiError(503, "service_unavailable", "The sign-in service is taking longer to respond. Please try again in a moment.");
 }
 
-export async function prepareAuthSession(): Promise<string> {
+export async function prepareAuthSession(apiOrigin?: string): Promise<string> {
+  if (apiOrigin) {
+    const url = new URL(apiOrigin);
+    if (url.protocol === "https:" || url.hostname === "localhost" || url.hostname === "127.0.0.1") wakeOrigin = url.origin;
+  }
+  if (csrfToken && Date.now() - sessionPreparedAt > 10 * 60 * 1000) csrfToken = null;
   if (csrfToken) return csrfToken;
   if (!csrfRequest) csrfRequest = loadCsrfToken().finally(() => { csrfRequest = null; });
   return csrfRequest;
@@ -79,6 +101,9 @@ export async function apiRequest<T>(path: string, options: ApiOptions = {}): Pro
     headers,
     credentials: "same-origin",
     cache: "no-store",
+    signal: options.signal ?? AbortSignal.timeout(20000),
+  }).catch(() => {
+    throw new ApiError(503, "connection_failed", "The connection was interrupted. Please try again shortly. If you were creating an account, try signing in first.");
   });
   let response = await send();
   if (response.status === 403) {

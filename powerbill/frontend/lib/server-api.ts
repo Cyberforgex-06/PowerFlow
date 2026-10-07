@@ -18,7 +18,7 @@ export async function serverApi<T>(path: string, init: RequestInit = {}): Promis
   const response = await backendFetch(path, { ...init, headers: h, cache: "no-store" });
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as ApiErrorShape | null;
-    throw new ServerApiError(response.status, body?.error.code ?? "request_failed", body?.error.message ?? "Request failed");
+    throw new ServerApiError(response.status, body?.error?.code ?? "request_failed", body?.error?.message ?? "Request failed");
   }
   return (await response.json()) as T;
 }

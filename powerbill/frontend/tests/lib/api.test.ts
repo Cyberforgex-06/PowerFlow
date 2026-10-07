@@ -66,3 +66,18 @@ describe("authentication recovery", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
+
+
+it("wakes the configured backend without credentials before acquiring the first-party session", async () => {
+  vi.resetModules();
+  const { prepareAuthSession: prepare } = await import("@/lib/api");
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(new Response("", { status: 200 }))
+    .mockResolvedValueOnce(Response.json({ csrf_token: "awake" }));
+  vi.stubGlobal("fetch", fetchMock);
+  await expect(prepare("https://backend.example")).resolves.toBe("awake");
+  expect(fetchMock.mock.calls[0][0]).toBe("https://backend.example/health");
+  expect(fetchMock.mock.calls[0][1]).toMatchObject({ credentials: "omit", mode: "no-cors", cache: "no-store" });
+  expect(fetchMock.mock.calls[1][0]).toBe("/api/v1/auth/csrf");
+  expect(fetchMock.mock.calls[1][1].credentials).toBe("same-origin");
+});

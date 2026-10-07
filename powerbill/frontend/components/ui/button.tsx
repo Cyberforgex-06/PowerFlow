@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes, AnchorHTMLAttributes, ReactNode } from "reac
 
 type Variant = "primary" | "secondary" | "danger" | "text";
 const styles: Record<Variant, string> = {
-  primary: "bg-forest text-paper border-forest hover:bg-forest-dark active:translate-y-px",
+  primary: "pb-button-primary bg-forest text-paper border-forest hover:bg-forest-dark active:translate-y-px",
   secondary: "bg-white text-ink border-line hover:border-forest hover:text-forest active:translate-y-px",
   danger: "bg-white text-status-overdue border-status-overdue hover:bg-[#FFF0EE] active:translate-y-px",
   text: "bg-transparent text-forest border-transparent hover:underline underline-offset-4",

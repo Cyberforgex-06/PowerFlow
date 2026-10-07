@@ -1,0 +1,16 @@
+PowerBill Phase 4 static security audit
+no_localStorage_tokens=PASS
+no_dangerouslySetInnerHTML_api=PASS
+no_NEXT_PUBLIC_sensitive_origin=PASS
+csrf_header_client_wrapper=PASS
+same_origin_credentials=PASS
+powerbill_session_proxy_guard=PASS
+nonce_csp_proxy=PASS
+no_backend_raw_execute_sql=PASS
+ownership_404_logging=PASS
+payment_for_update=PASS
+payment_amount_from_bill=PASS
+password_bcrypt_72_validation=PASS
+cache_no_store=PASS
+production_hsts=PASS
+passed=14/14

@@ -1,0 +1,9 @@
+"use client";
+import { useState } from "react";
+import { GaugeCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { FieldLabel, Input, Select } from "@/components/ui/field";
+import { ApiError, apiRequest } from "@/lib/api";
+import type { Bill, Meter } from "@/lib/types";
+export function StaffReadingForm({meters}:{meters:Meter[]}){const [message,setMessage]=useState("");const [busy,setBusy]=useState(false);async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setMessage("");const fd=new FormData(e.currentTarget);const data={meter_id:String(fd.get("meter_id")??""),reading:String(fd.get("reading")??"")};if(!data.meter_id||!data.reading){setMessage("Choose a meter and enter a reading.");return}setBusy(true);try{const body=await apiRequest<{bill:Bill}>("/api/v1/staff/readings",{method:"POST",body:JSON.stringify(data)});window.location.assign(`/staff/bills/${body.bill.id}`)}catch(e){setMessage(e instanceof ApiError?e.message:"Reading could not be entered.")}finally{setBusy(false)}}return <form onSubmit={submit} className="max-w-2xl"><Card className="p-5 md:p-7"><div><FieldLabel htmlFor="meter_id">Meter</FieldLabel><Select id="meter_id" name="meter_id" defaultValue="" required><option value="" disabled>Select meter</option>{meters.map(m=><option key={m.id} value={m.id}>{m.meter_number}</option>)}</Select></div><div className="mt-5"><FieldLabel htmlFor="reading">Current reading</FieldLabel><Input id="reading" name="reading" inputMode="decimal" autoComplete="off" required/></div>{message?<p role="alert" className="mt-4 text-sm text-status-overdue">{message}</p>:null}<Button aria-busy={busy} disabled={busy} className="mt-6 w-full sm:w-auto" type="submit"><GaugeCircle size={17} strokeWidth={1.8}/>{busy?"Generating bill…":"Enter reading and generate bill"}</Button></Card></form>}

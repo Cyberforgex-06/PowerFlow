@@ -1,0 +1,1 @@
+import { SystemPage } from "@/components/system/system-page"; export default function RateLimited(){return <SystemPage kind={429} title="Too many requests." body="A rate limit is protecting this endpoint. Wait before trying again; repeated login failures can also temporarily lock the account." actionHref="/login" actionLabel="Back to login"/>}

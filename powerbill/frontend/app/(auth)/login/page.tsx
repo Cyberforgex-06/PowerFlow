@@ -1,0 +1,1 @@
+import { Suspense } from "react"; import { LoginForm } from "@/components/auth/login-form"; import { Skeleton } from "@/components/ui/skeleton"; export const metadata={title:"Log in"}; export default function Login(){return <Suspense fallback={<Skeleton className="h-[30rem] w-full max-w-lg"/>}><LoginForm/></Suspense>}

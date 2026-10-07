@@ -1,10 +1,11 @@
 node_modules/
 .next/
-.env*
-!.env.example
-*.tsbuildinfo
-test-results/
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+.env.local
 playwright-report/
+test-results/
+*.tsbuildinfo
 .vercel/
-
-supabase/.temp/

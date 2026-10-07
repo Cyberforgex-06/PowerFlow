@@ -1,0 +1,6 @@
+"use client";
+import {useState} from "react";
+import Link from "next/link";
+import {Menu,X} from "lucide-react";
+import {Brand} from "./brand";
+export function PublicNav(){const [open,setOpen]=useState(false);return <><a className="skip-link" href="#main">Skip to content</a><header className="site-nav"><div className="wrap nav-row"><Brand/><nav className="nav-links" aria-label="Main navigation"><Link href="/#features">Features</Link><Link href="/#how-it-works">How it works</Link><Link href="/#help">Help</Link></nav><div className="nav-actions"><Link className="sign-in" href="/login">Sign in</Link><Link className="btn" href="/register">Create account <span aria-hidden="true">↗</span></Link></div><button className="mobile-menu" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="mobile-links" onClick={()=>setOpen(!open)}>{open?<X size={18}/>:<Menu size={18}/>}</button></div>{open?<nav className="mobile-links open" id="mobile-links" aria-label="Mobile navigation">{[["/#features","Features"],["/#how-it-works","How it works"],["/#help","Help"],["/login","Sign in"]].map(([href,text])=><Link key={href} href={href} onClick={()=>setOpen(false)}>{text}</Link>)}</nav>:null}</header></>}

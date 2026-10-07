@@ -1,0 +1,6 @@
+ImportError while loading conftest '/mnt/data/powerbill_phase4/backend/tests/conftest.py'.
+tests/conftest.py:7: in <module>
+    from app import create_app
+app/__init__.py:5: in <module>
+    from flask import Flask, jsonify, request
+E   ModuleNotFoundError: No module named 'flask'

@@ -1,0 +1,5 @@
+import { Ban, CircleAlert, Clock3, FileQuestion, ServerCrash } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+const icons={403:Ban,404:FileQuestion,429:Clock3,500:ServerCrash,session:CircleAlert};
+export function SystemPage({kind,title,body,actionHref="/",actionLabel="Back to PowerBill"}:{kind:keyof typeof icons;title:string;body:string;actionHref?:string;actionLabel?:string}){const Icon=icons[kind];return <main className="grid min-h-dvh place-items-center px-6 py-16"><Card className="w-full max-w-xl p-8 md:p-10"><p className="font-mono text-[11px] font-bold tracking-[.08em] text-forest">POWERBILL SYSTEM MESSAGE</p><Icon className="mt-8 text-forest" size={36} strokeWidth={1.7}/><h1 className="mt-5 font-display text-3xl font-bold tracking-[-.025em]">{title}</h1><p className="mt-3 text-sm leading-6 text-info md:text-base">{body}</p><ButtonLink href={actionHref} className="mt-7">{actionLabel}</ButtonLink></Card></main>}

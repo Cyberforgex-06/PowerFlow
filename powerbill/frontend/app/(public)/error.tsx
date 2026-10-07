@@ -1,0 +1,1 @@
+"use client"; import { RouteError } from "@/components/system/route-error"; export default function Error({reset}:{error:Error&{digest?:string};reset:()=>void}){return <main className="content-wrap py-16"><RouteError reset={reset}/></main>}

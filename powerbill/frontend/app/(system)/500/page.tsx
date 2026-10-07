@@ -1,0 +1,1 @@
+import { SystemPage } from "@/components/system/system-page"; export default function ServerError(){return <SystemPage kind={500} title="The server could not complete that request." body="PowerBill does not display stack traces or internal exception details in the browser. Try again or return to the dashboard."/>}

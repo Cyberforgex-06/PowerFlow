@@ -8,6 +8,7 @@ from flask import Flask, request, jsonify, g, send_from_directory, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import UniqueConstraint, CheckConstraint, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.engine import URL
 
 db = SQLAlchemy()
 def uid(): return secrets.token_hex(16)
@@ -100,6 +101,8 @@ def create_app(config=None):
     url=os.getenv('DATABASE_URL','')
     if url.startswith('postgres://'): url=url.replace('postgres://','postgresql+psycopg://',1)
     elif url.startswith('postgresql://'): url=url.replace('postgresql://','postgresql+psycopg://',1)
+    if not url and os.getenv('DATABASE_PASSWORD') and os.getenv('DATABASE_HOST') and os.getenv('DATABASE_USER'):
+        url=URL.create('postgresql+psycopg',username=os.environ['DATABASE_USER'],password=os.environ['DATABASE_PASSWORD'],host=os.environ['DATABASE_HOST'],port=int(os.getenv('DATABASE_PORT','5432')),database=os.getenv('DATABASE_NAME','postgres'),query={'sslmode':'require'})
     app.config.update(SQLALCHEMY_DATABASE_URI=url or 'sqlite://',SQLALCHEMY_TRACK_MODIFICATIONS=False,MAX_CONTENT_LENGTH=2*1024*1024+8192,READY=bool(url),PUBLIC_URL=os.getenv('PUBLIC_URL',''),SECURE_COOKIES=True)
     if config: app.config.update(config)
     db.init_app(app)

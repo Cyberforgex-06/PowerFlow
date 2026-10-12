@@ -144,3 +144,17 @@ def test_https_email_registration_and_provider_failure(app,monkeypatch):
     assert r.status_code==503
     with app.app_context():
         assert db.session.scalar(db.select(User).where(User.email=='failure@example.com')) is None
+
+
+def test_database_password_component_encoding(monkeypatch):
+    from app import create_app
+    from sqlalchemy.engine import make_url
+    monkeypatch.delenv('DATABASE_URL',raising=False)
+    monkeypatch.setenv('DATABASE_HOST','db.example.invalid')
+    monkeypatch.setenv('DATABASE_USER','postgres.test-project')
+    monkeypatch.setenv('DATABASE_PASSWORD','p@ss:word/#%?')
+    a=create_app({'TESTING':True})
+    url=a.config['SQLALCHEMY_DATABASE_URI']
+    assert a.config['READY'] is True
+    assert url.query['sslmode']=='require'
+    assert make_url(url.render_as_string(hide_password=False)).password=='p@ss:word/#%?'

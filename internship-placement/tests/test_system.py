@@ -110,3 +110,37 @@ def test_input_validation_and_security_headers(app):
     c=app.test_client();h=login(c,'student')
     assert c.patch('/api/profile',json={'name':'X','portfolio':'javascript:alert(1)'},headers=h).status_code==400
     r=c.get('/');assert "frame-ancestors 'none'" in r.headers['Content-Security-Policy'];assert r.headers['X-Content-Type-Options']=='nosniff'
+
+def test_https_email_registration_and_provider_failure(app,monkeypatch):
+    import json
+    import app as module
+    monkeypatch.setenv('BREVO_API_KEY','test-only-key')
+    monkeypatch.setenv('EMAIL_FROM','sender@example.com')
+    app.config.update(TESTING=False,PUBLIC_URL='http://localhost')
+    requests=[]
+    class Accepted:
+        status=201
+        def __enter__(self): return self
+        def __exit__(self,*args): pass
+    def accept(req,timeout):
+        requests.append(req)
+        assert req.full_url=='https://api.brevo.com/v3/smtp/email'
+        return Accepted()
+    monkeypatch.setattr(module,'urlopen',accept)
+    c=app.test_client()
+    assert c.get('/api/config').json['email_ready'] is True
+    r=c.post('/api/auth/register',json={'name':'New Student','email':'new@example.com','password':'StrongPassword123','role':'student'},headers=ORIGIN)
+    assert r.status_code==201
+    payload=json.loads(requests[0].data)
+    assert payload['to']==[{'email':'new@example.com'}]
+    assert payload['sender']['email']=='sender@example.com'
+    assert '/#verify?token=' in payload['textContent']
+    with app.app_context():
+        u=db.session.scalar(db.select(User).where(User.email=='new@example.com'))
+        assert u is not None and not u.verified
+    def reject(req,timeout): raise OSError('provider unavailable')
+    monkeypatch.setattr(module,'urlopen',reject)
+    r=c.post('/api/auth/register',json={'name':'Other Student','email':'failure@example.com','password':'StrongPassword123','role':'student'},headers=ORIGIN)
+    assert r.status_code==503
+    with app.app_context():
+        assert db.session.scalar(db.select(User).where(User.email=='failure@example.com')) is None

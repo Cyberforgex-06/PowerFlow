@@ -1,4 +1,5 @@
-import os, re, secrets, hashlib, time, smtplib, io
+import os, re, secrets, hashlib, time, smtplib, io, json
+from urllib.request import Request, urlopen
 from datetime import date
 from email.message import EmailMessage
 from functools import wraps
@@ -127,12 +128,22 @@ def create_app(config=None):
         raw=secrets.token_urlsafe(32)
         db.session.add(Token(id=digest(raw),user_id=u.id,purpose=purpose,expires=time.time()+3600))
         if app.testing: return raw
-        host=os.getenv('SMTP_HOST')
-        if not host or not app.config['PUBLIC_URL']: raise RuntimeError('Email delivery is not configured yet.')
-        m=EmailMessage();m['From']=os.getenv('SMTP_FROM','');m['To']=u.email;m['Subject']='Verify your Placement account' if purpose=='verify' else 'Reset your Placement password'
-        m.set_content(f"Open this link within one hour: {app.config['PUBLIC_URL']}/#{purpose}?token={raw}\nIf you did not request this, ignore this email.")
-        with smtplib.SMTP(host,int(os.getenv('SMTP_PORT','587')),timeout=15) as smtp:
-            smtp.starttls();smtp.login(os.getenv('SMTP_USER',''),os.getenv('SMTP_PASSWORD',''));smtp.send_message(m)
+        sender=os.getenv('EMAIL_FROM') or os.getenv('SMTP_FROM','')
+        subject='Verify your Placement account' if purpose=='verify' else 'Reset your Placement password'
+        body=f"Open this link within one hour: {app.config['PUBLIC_URL']}/#{purpose}?token={raw}\nIf you did not request this, ignore this email."
+        if not app.config['PUBLIC_URL'] or not sender: raise RuntimeError('Email delivery is not configured yet.')
+        key=os.getenv('BREVO_API_KEY')
+        if key:
+            payload={'sender':{'name':'Placement','email':sender},'to':[{'email':u.email}],'subject':subject,'textContent':body}
+            req=Request('https://api.brevo.com/v3/smtp/email',data=json.dumps(payload).encode(),headers={'api-key':key,'Content-Type':'application/json','Accept':'application/json'},method='POST')
+            with urlopen(req,timeout=15) as response:
+                if response.status!=201: raise RuntimeError('Email provider did not accept the message.')
+        else:
+            host=os.getenv('SMTP_HOST')
+            if not host: raise RuntimeError('Email delivery is not configured yet.')
+            m=EmailMessage();m['From']=sender;m['To']=u.email;m['Subject']=subject;m.set_content(body)
+            with smtplib.SMTP(host,int(os.getenv('SMTP_PORT','587')),timeout=15) as smtp:
+                smtp.starttls();smtp.login(os.getenv('SMTP_USER',''),os.getenv('SMTP_PASSWORD',''));smtp.send_message(m)
         return raw
     @app.before_request
     def security():
@@ -171,7 +182,7 @@ def create_app(config=None):
     @app.errorhandler(413)
     def too_large(e): return err('Upload a PDF smaller than 2 MB.',413)
     @app.get('/api/config')
-    def config_route(): return jsonify(live=app.config['READY'],email_ready=bool(os.getenv('SMTP_HOST')) or app.testing)
+    def config_route(): return jsonify(live=app.config['READY'],email_ready=app.testing or bool(app.config['PUBLIC_URL'] and (os.getenv('EMAIL_FROM') or os.getenv('SMTP_FROM')) and (os.getenv('BREVO_API_KEY') or os.getenv('SMTP_HOST'))))
     @app.get('/api/health')
     def health(): return jsonify(status='ok',accounts_enabled=app.config['READY'])
     @app.get('/api/me')

@@ -4,7 +4,7 @@ Minimalist responsive website and Flask API for students across all departments,
 
 ## Current state
 
-The Render deployment serves the interactive demo until a dedicated Supabase PostgreSQL database and email delivery are configured. Demo openings and companies are fictional. Demo changes stay in JavaScript memory and reset on refresh. The demo never submits credentials, CV files, or applications to the backend. Real registration returns an explicit service-unavailable response while configuration is missing.
+The dedicated Supabase PostgreSQL database is connected and the live listings API has been verified. Email delivery remains unconfigured, so real account registration cannot complete yet. The interactive demo remains available for exploring workflows. Demo openings and companies are fictional. Demo changes stay in JavaScript memory and reset on refresh. The demo never submits credentials, CV files, or applications to the backend. Real registration returns an explicit service-unavailable response while configuration is missing.
 
 Figma file creation succeeded, but the Starter-plan MCP limit prevented screen composition. The file is blank and is not a completed design deliverable. The implemented website contains the actual minimalist design.
 
